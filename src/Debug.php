@@ -2,6 +2,8 @@
 
 namespace cronfy\debug;
 
+use Symfony\Component\VarDumper\VarDumper;
+
 class Debug {
 
     public static $debug = false;
@@ -51,7 +53,11 @@ class Debug {
             if ($vardump) {
                 var_dump($var);
             } else {
-                print_r($var);
+                if (class_exists(VarDumper::class)) {
+                    VarDumper::dump($var);
+                } else {
+                    print_r($var);
+                }
             }
             echo "\n<br>\nDebug in {$file} line {$line} (end)";
             die();
