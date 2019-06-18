@@ -6,6 +6,11 @@ use Symfony\Component\VarDumper\VarDumper;
 
 class Debug {
 
+    const DUMP_PRINT_R = 2;
+    const DUMP_PRINT_R_ALIAS = 0;
+    const DUMP_VAR_DUMP = 3;
+    const DUMP_SIMFONY_VAR_DUMPER = 4;
+
     public static $debug = false;
 
     public static function stacktrace($exception) {
@@ -29,20 +34,21 @@ class Debug {
     }
 
     /**
-     * Дебаг. Печатает $var и делает die().
+     * Debug. Prints $var and die()s.
      *
-     * Для глобального использования в виде шортката `D($some_var)`:
+     * To create a shortcut like `D($some_var);`, define function like this somewhere in global namespace:
      *
      * ```
-     * // где-нибудь в глобальном неймспейсе
-     * function D($var = null, $vardump = null) { call_user_func_array('\cronfy\debug\Debug::D', [$var, $vardump, 2]); }
+     * // somewhere in global namespace
+     *
+     * function D($var = null, $format = null) { call_user_func_array('\cronfy\debug\Debug::D', [$var, $format, 2]); }
      * ```
      *
      * @param mixed $var data to dump
-     * @param bool $vardump whether to use var_dump, if false then print_r will be used. Default false.
+     * @param bool $dumpFormat dump format, @see Debug::dumpVar(). Default is print_r().
      * @param int $backtrace_index tuning when called indirectly (e. g. via other debug function)
      */
-    public static function D($var, $vardump = false, $backtrace_index = 0)
+    public static function D($var, $dumpFormat = false, $backtrace_index = 0)
     {
         if (static::$debug) {
             $backtrace = debug_backtrace();
@@ -50,15 +56,9 @@ class Debug {
             $file = @$caller['file'];
             $line = @$caller['line'];
             echo "\n<br>\nDebug in {$file} line {$line} (start)\n<br>\n";
-            if ($vardump) {
-                var_dump($var);
-            } else {
-                if (class_exists(VarDumper::class)) {
-                    VarDumper::dump($var);
-                } else {
-                    print_r($var);
-                }
-            }
+
+            static::dumpVar($var, $dumpFormat);
+
             echo "\n<br>\nDebug in {$file} line {$line} (end)";
             die();
         } else {
@@ -66,31 +66,65 @@ class Debug {
         }
     }
 
+    protected static function dumpVar($var, $format) {
+        switch (true) {
+            case $format === static::DUMP_PRINT_R:
+            case $format === static::DUMP_PRINT_R_ALIAS:
+                break;
+            case $format === static::DUMP_SIMFONY_VAR_DUMPER:
+                break;
+            case $format === static::DUMP_VAR_DUMP:
+                break;
+            case $format == true:
+                $format = static::DUMP_VAR_DUMP;
+                break;
+            default:
+                if (class_exists(VarDumper::class)) {
+                    $format = static::DUMP_SIMFONY_VAR_DUMPER;
+                } else {
+                    $format = static::DUMP_PRINT_R;
+                }
+                break;
+        }
+
+        switch ($format) {
+            case static::DUMP_VAR_DUMP:
+                var_dump($var);
+                break;
+            case static::DUMP_SIMFONY_VAR_DUMPER:
+                VarDumper::dump($var);
+                break;
+            case static::DUMP_PRINT_R:
+            default:
+                print_r($var);
+                break;
+        }
+    }
+
     /**
-     * Дебаг. Печатает $var и продолжает работу.
+     * Echo debug. Prints $var, but does not call die().
      *
-     * Для глобального использования в виде шортката `E($some_var)`:
+     * To create a shortcut like `E($some_var);`, define function like this somewhere in global namespace:
      *
      * ```
-     * // где-нибудь в глобальном неймспейсе
-     * function E($var = null, $vardump = null) { call_user_func_array('\cronfy\debug\Debug::E', [$var, $vardump, 2]); }
+     * // somewhere in global namespace
+     *
+     * function E($var = null, $format = null) { call_user_func_array('\cronfy\debug\Debug::E', [$var, $format, 2]); }
      * ```
      *
      * @param mixed $var data to dump
-     * @param bool $vardump whether to use var_dump, if false then print_r will be used. Default false.
+     * @param bool $dumpFormat dump format
      * @param int $backtrace_index tuning when called indirectly (e. g. via other debug function)
      */
-    public static function E($var, $vardump = false, $backtrace_index = 0)
+    public static function E($var, $dumpFormat = false, $backtrace_index = 0)
     {
         if (static::$debug) {
             $backtrace = debug_backtrace();
             $caller = $backtrace[$backtrace_index];
-            if ($vardump) {
-                var_dump($var);
-            } else {
-                print_r($var);
-            }
-            echo " <small>Debug in {$caller['file']} line {$caller['line']}</small><br>\n";
+
+            static::dumpVar($var, $dumpFormat);
+
+             echo " <small>Debug in {$caller['file']} line {$caller['line']}</small><br>\n";
         } else {
             // do not echo
         }
