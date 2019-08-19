@@ -1,19 +1,32 @@
 # PHP Debug helpers
 
-## Debug::stacktrace()
+Вспомогательные функции для дебага. 
 
-Выводит полный stacktrace для Exception PHP.
+## `Debug::D($var)`
 
-Пример использования:
+Дампит `$var` и завершает работу через `die();`. Также печатает файл и строку,
+где это произошло, чтобы легко можно было найти место срабатывания
+дебага (вечная проблема при использовании `print_r($var); die();`).
+Вторым агрументом можно определить формат вывода: `print_r()`/`var_dump()`/Symfony VarDumper.
+
+Рекомендуется предварительно подключить вспомогательную функцию, чтобы вызывать дебаг функцией из 1-го
+символа:
 
 ```php
-define('YII_ENABLE_ERROR_HANDLER', false);
-set_exception_handler([
-    'cronfy\experience\php\debug\Debug',
-    'stacktrace'
-]);
+// где-нибудь в глобальном неймспейсе, например, там, где подключается vendor/autoload.php
+
+function D($var = null, $format = null) { call_user_func_array('\cronfy\debug\Debug::D', [$var, $format, 2]); }
 ```
 
-## D(), E()
+Теперь можно вызывать просто `D($var)`, пример результата:
 
-Инструкции в исходниках.
+```
+Debug in /app/www/index.php line 7 (start) 
+Array ( [0] => 1 [1] => 2 [2] => foo [3] => bar ) 
+Debug in /app/www/index.php line 7 (end)
+```
+
+
+## `Debug::E()`
+
+Аналогично `D()`, но не завершает работу после дампа. 
