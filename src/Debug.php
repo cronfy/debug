@@ -59,7 +59,7 @@ class Debug {
 
             static::dumpVar($var, $dumpFormat);
 
-            echo "\n<br>\nDebug in {$file} line {$line} (end)";
+            echo "\n<br>\nDebug in {$file} line {$line} (end)\n";
             die();
         } else {
             die('by D');
