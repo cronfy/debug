@@ -12,6 +12,7 @@ class Debug {
     const DUMP_SIMFONY_VAR_DUMPER = 4;
 
     public static $debug = false;
+    public static $logFile;
 
     public static function stacktrace($exception) {
         // http://uk3.php.net/manual/en/function.set-exception-handler.php#114582
@@ -128,6 +129,14 @@ class Debug {
         } else {
             // do not echo
         }
+    }
+
+    public static function L($message) {
+        if (!static::$logFile) {
+            throw new \Exception("Log file must be set");
+        }
+
+        error_log(date('Y-m-d H:i:s ') . print_r($message, 1) . "\n", 3, static::$logFile);
     }
 
 }
